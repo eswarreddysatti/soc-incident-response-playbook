@@ -1,63 +1,30 @@
 #!/usr/bin/env python3
 
-"""
-IOC Extractor
-
-Simple command-line utility to extract common Indicators of Compromise (IOCs)
-from a text file.
-
-Current version extracts:
-- IPv4 addresses
-- Domain names
-
-Author: Eswar Reddy Satti
-"""
-
-import argparse
-import pathlib
 import re
+import sys
 
+PATTERNS = {
+    "IPv4": r"\b(?:\d{1,3}\.){3}\d{1,3}\b",
+    "Domain": r"\b(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}\b",
+    "URL": r"https?://[^\s]+",
+    "Email": r"\b[\w\.-]+@[\w\.-]+\.\w+\b",
+    "MD5": r"\b[a-fA-F0-9]{32}\b",
+    "SHA1": r"\b[a-fA-F0-9]{40}\b",
+    "SHA256": r"\b[a-fA-F0-9]{64}\b",
+}
 
-IP_REGEX = r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b"
+if len(sys.argv) != 2:
+    print(f"Usage: python3 {sys.argv[0]} <file>")
+    sys.exit(1)
 
-DOMAIN_REGEX = (
-    r"\b(?:[a-zA-Z0-9-]+\.)+"
-    r"(?:com|net|org|io|co|edu|gov|in|tech|xyz)\b"
-)
+with open(sys.argv[1], "r", encoding="utf-8", errors="ignore") as f:
+    data = f.read()
 
-
-def extract_iocs(text):
-    ips = sorted(set(re.findall(IP_REGEX, text)))
-    domains = sorted(set(re.findall(DOMAIN_REGEX, text)))
-
-    return {
-        "ip_addresses": ips,
-        "domains": domains,
-    }
-
-
-def main():
-    parser = argparse.ArgumentParser(description="IOC Extractor")
-    parser.add_argument("file", help="Input text file")
-
-    args = parser.parse_args()
-
-    content = pathlib.Path(args.file).read_text(errors="ignore")
-
-    results = extract_iocs(content)
-
-    print("\n=== IOC Extraction Results ===\n")
-
-    print(f"IP Addresses ({len(results['ip_addresses'])})")
-    for ip in results["ip_addresses"]:
-        print(f" - {ip}")
-
-    print()
-
-    print(f"Domains ({len(results['domains'])})")
-    for domain in results["domains"]:
-        print(f" - {domain}")
-
-
-if __name__ == "__main__":
-    main()
+for name, pattern in PATTERNS.items():
+    matches = sorted(set(re.findall(pattern, data)))
+    print(f"\n{name}:")
+    if matches:
+        for match in matches:
+            print(f"  - {match}")
+    else:
+        print("  None found")

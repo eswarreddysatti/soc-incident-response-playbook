@@ -1,0 +1,19 @@
+title: Windows Brute Force Login Detection
+id: 2c3c5d7e-1111-4444-8888-abcdef123456
+status: experimental
+description: Detects multiple failed Windows logon attempts.
+author: Eswar Reddy
+date: 2026-06-27
+logsource:
+  product: windows
+  service: security
+detection:
+  selection:
+    EventID: 4625
+  condition: selection
+falsepositives:
+  - User typing incorrect password
+level: medium
+tags:
+  - attack.credential-access
+  - attack.t1110
